@@ -3,6 +3,7 @@
   "description": "Simple Sentiment Analysis App",
   "version": "0.9.1",
   "dependencies": {
+    "async": "^1.0.0",
     "express": "3.x",
     "moment": "^2.10.3",
     "mongodb": "*",

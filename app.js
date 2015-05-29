@@ -3,7 +3,7 @@ var express = require("express");
 var mongoClient = require("mongodb").MongoClient;
 var mqlight = require('mqlight');
 var moment = require('moment');
-
+var async = require('async');
 
 // Settings
 var dbKeywordsCollection	= "keywords";
@@ -172,37 +172,43 @@ function updateCache(phrase, date) {
     	}
 	};
 
-	resultsCollection.find(findObject).sort({date: -1}).toArray(function(err, docs) {
 
-		var tweets = 0;
-		var totalsentiment = 0;
-		var history = [];
-
-		docs.forEach(function(tweet) {
-			tweets++;
-			totalsentiment += tweet.sentiment;
-
-			if(i < 5) {
-				history.push(tweet);
+	resultsCollection.aggregate([
+			{
+				$match: findObject
+			},
+			{
+				$group: {
+					_id: "$phrase",
+					totalsentiment: { $sum: "$sentiment" },
+					tweets: { $sum: 1 }
+				}
 			}
+		],
+		function(err, result) {
+
+			console.log(result);
+			var tweets = result.tweets
+
+			resultsCollection.find(findObject).sort({date: -1}).limit(5).toArray(function(err, docs) {
+				var history = [];
+
+				docs.forEach(function(tweet, index) {
+					history.push(tweet);
+				});
+
+				var cacheEntry = {
+							phrase: phrase,
+							date: startDate,
+							tweets: result[0].tweets,
+							totalsentiment: result[0].totalsentiment,
+							history: history
+						};
+
+				cacheCollection.update({phrase: phrase, date: startDate}, cacheEntry, {upsert: true});
+			});
 
 		});
-
-		var cacheEntry = {
-					phrase: phrase,
-					date: startDate,
-					tweets: tweets,
-					totalsentiment: totalsentiment,
-					history: history
-				};
-
-		console.log(cacheEntry);
-
-		cacheCollection.remove({phrase: phrase, date: startDate}, function(err, result) {
-			cacheCollection.insert(cacheEntry);
-		});
-
-	});
 }
 
 
