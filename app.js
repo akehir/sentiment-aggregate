@@ -191,10 +191,10 @@ function updateCache(phrase, date) {
 			var tweets = result.tweets
 
 			resultsCollection.find(findObject).sort({date: -1}).limit(5).toArray(function(err, docs) {
-				var history = [];
+				var latestTweets = [];
 
 				docs.forEach(function(tweet, index) {
-					history.push(tweet);
+					latestTweets.push(tweet);
 				});
 
 				var cacheEntry = {
@@ -202,7 +202,7 @@ function updateCache(phrase, date) {
 							date: startDate,
 							tweets: result[0].tweets,
 							totalsentiment: result[0].totalsentiment,
-							history: history
+							latestTweets: latestTweets
 						};
 
 				cacheCollection.update({phrase: phrase, date: startDate}, cacheEntry, {upsert: true});
