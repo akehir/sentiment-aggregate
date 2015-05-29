@@ -2,7 +2,7 @@ var port = (process.env.VCAP_APP_PORT || 3010);
 var express = require("express");
 var mongoClient = require("mongodb").MongoClient;
 var mqlight = require('mqlight');
-var sentiment = require('sentiment');
+var moment = require('moment');
 
 
 // Settings
@@ -142,7 +142,7 @@ function processMessage(data, delivery) {
 	    console.error("Bad data received: " + data);
 	  }
 	  else {
-	    console.log("Received data: " + JSON.stringify(data));
+	    //console.log("Received data: " + JSON.stringify(data));
 	    // Upper case it and publish a notification
 	    
 	    updateCache(analyzed.phrase, analyzed.date);
@@ -151,7 +151,7 @@ function processMessage(data, delivery) {
 
 
 function runGC() {
- setTimeout(function () {    //  call a 30s setTimeout when the loop is called
+ setInterval(function () {    //  call a 30s setTimeout when the loop is called
 		console.log("Running GC.");
 		global.gc();
 		console.log("Completed GC.");
@@ -178,23 +178,28 @@ function updateCache(phrase, date) {
 		var totalsentiment = 0;
 		var history = [];
 
-		for (var i = 0; i<docs.length; i++) {
-			var entry = docs[i];
-
+		docs.forEach(function(tweet) {
 			tweets++;
-			totalsentiment += entry.sentiment;
-		}
+			totalsentiment += tweet.sentiment;
 
-		cacheCollection.findOne({phrase: phrase, date: startDate}).toArray(function(err, docs) {
-			if (docs.length > 0) {
-				cacheCollection.update({phrase: phrase, date: startDate}, {$set: {totalsentiment: totalsentiment}});
-			} else {
-				cacheCollection.insert({
+			if(i < 5) {
+				history.push(tweet);
+			}
+
+		});
+
+		var cacheEntry = {
 					phrase: phrase,
 					date: startDate,
-					totalsentiment: totalsentiment
-				});
-			}
+					tweets: tweets,
+					totalsentiment: totalsentiment,
+					history: history
+				};
+
+		console.log(cacheEntry);
+
+		cacheCollection.remove({phrase: phrase, date: startDate}, function(err, result) {
+			cacheCollection.insert(cacheEntry);
 		});
 
 	});
