@@ -138,14 +138,14 @@ function processMessage(data, delivery) {
 	  } catch (e) {
 	    // Expected if we already have a Javascript object
 	  }
-	  if (!tweet) {
+	  if (!analyzed) {
 	    console.error("Bad data received: " + data);
 	  }
 	  else {
 	    console.log("Received data: " + JSON.stringify(data));
 	    // Upper case it and publish a notification
 	    
-	    // Aggregate data!
+	    updateCache(analyzed.phrase, analyzed.date);
 	  }
 }
 
@@ -157,6 +157,49 @@ function runGC() {
 		console.log("Completed GC.");
 	}, 30000)
 }
+
+function updateCache(phrase, date) {
+
+	var dayMoment = moment(date).startOf('day');
+	var startDate = dayMoment.toISOString();
+	var endDate   = dayMoment.endOf('day').toISOString();
+
+	var findObject = {
+		phrase: phrase,
+		date: {
+	        $gte: startDate,
+	        $lt: endDate
+    	}
+	};
+
+	resultsCollection.find(findObject).sort({date: -1}).toArray(function(err, docs) {
+
+		var tweets = 0;
+		var totalsentiment = 0;
+		var history = [];
+
+		for (var i = 0; i<docs.length; i++) {
+			var entry = docs[i];
+
+			tweets++;
+			totalsentiment += entry.sentiment;
+		}
+
+		cacheCollection.findOne({phrase: phrase, date: startDate}).toArray(function(err, docs) {
+			if (docs.length > 0) {
+				cacheCollection.update({phrase: phrase, date: startDate}, {$set: {totalsentiment: totalsentiment}});
+			} else {
+				cacheCollection.insert({
+					phrase: phrase,
+					date: startDate,
+					totalsentiment: totalsentiment
+				});
+			}
+		});
+
+	});
+}
+
 
 app.listen(port);
 console.log("Server listening on port " + port);
