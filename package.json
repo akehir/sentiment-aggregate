@@ -1,6 +1,6 @@
 {
-  "name": "SimpleSentimentAnalysisApp",
-  "description": "Simple Sentiment Analysis App",
+  "name": "SentiAggregate",
+  "description": "UZH - Advanced Software Engineering - Sentiment Aggregator",
   "version": "0.9.1",
   "dependencies": {
     "async": "^1.0.0",
@@ -14,9 +14,9 @@
     "grunt-contrib-jshint": "~0.6.3"
   },
   "engines": {
-    "node": "0.10.26"
+    "node": "0.10.38"
   },
   "scripts": {
-    "start": "node app.js"
+    "start": "node --expose-gc app.js"
   }
 }
