@@ -1,14 +1,14 @@
 ---
 applications:
-- name: SentimentAnalysis-Aggregate
+- name: SentiAggregate
   memory: 128M
   instances: 1
   command: node --expose-gc app.js
-  host: sentimentanalysis-aggregate-akehir
+  host: asenti-aggregate
   domain: eu-gb.mybluemix.net
   path: .
   services: 
-   - mongodb-sentiment
-   - Auto-Scaling-z4
-   - Monitoring and Analytics-t1
+   - sentiment-mongodb
    - sentiment-mq
+   - sentiment-autoscaling
+   - sentiment-monitoring
