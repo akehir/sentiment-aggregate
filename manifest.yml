@@ -5,7 +5,7 @@ applications:
   instances: 1
   command: node --expose-gc app.js
   host: asenti-aggregate
-  domain: eu-gb.mybluemix.net
+  domain: mybluemix.net
   path: .
   services: 
    - sentiment-mongodb
